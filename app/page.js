@@ -1,65 +1,323 @@
-import Image from "next/image";
+'use client'
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/AuthContext'
+import { useLang } from '@/lib/LangContext'
+import { isAdmin } from '@/lib/isAdmin'
+import dynamic from 'next/dynamic'
+import HeroSlider from '@/components/HeroSlider'
+import ReportFeed from '@/components/ReportFeed'
 
-export default function Home() {
+const ZoneMap = dynamic(() => import('@/components/ZoneMap'), { ssr: false })
+
+export default function HomePage() {
+  const { user } = useAuth()
+  const { t } = useLang()
+  const userIsAdmin = isAdmin(user)
+
+  const [zones, setZones] = useState([])
+  const [reports, setReports] = useState([])
+  const [announcements, setAnnouncements] = useState([])
+
+  useEffect(() => {
+    fetch('/api/zones').then(r => r.json()).then(setZones)
+    fetch('/api/reports').then(r => r.json()).then(setReports)
+    fetch('/api/announcements').then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setAnnouncements(data)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      window.__currentUser = user
+      window.__currentUserIsAdmin = isAdmin(user)
+    }
+  }, [user])
+
+  const waterAlert = zones.find(z => z.water_status === 'outage' || z.water_status === 'issues')
+  const elecAlert = zones.find(z => z.electricity_status === 'outage' || z.electricity_status === 'issues')
+  const gasAlert = zones.find(z => z.gas_status === 'outage' || z.gas_status === 'issues')
+
+  const totalReports = reports.length
+  const affectedZones = zones.filter(z =>
+    z.water_status !== 'normal' || z.electricity_status !== 'normal' || z.gas_status !== 'normal'
+  ).length
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div style={{ background: '#f8fafc', minHeight: '100vh' }}>
+
+      {/* Hero Slider - flush below navbar, no gap */}
+      <HeroSlider />
+
+      {/* Alert Banners */}
+      {(waterAlert || elecAlert || gasAlert) && (
+        <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {waterAlert && (
+            <div style={{
+              background: waterAlert.water_status === 'outage' ? '#fee2e2' : '#fef3c7',
+              border: `1px solid ${waterAlert.water_status === 'outage' ? '#fca5a5' : '#fde68a'}`,
+              borderRadius: '10px',
+              padding: '10px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <span style={{ fontSize: '18px' }}>{'💧'}</span>
+              <div>
+                <p style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: waterAlert.water_status === 'outage' ? '#b91c1c' : '#92400e',
+                  margin: 0,
+                }}>
+                  Water {waterAlert.water_status === 'outage' ? 'Outage' : 'Issues'} &mdash; {waterAlert.name}
+                </p>
+                <p style={{ fontSize: '11px', color: '#6b7280', margin: 0 }}>
+                  {waterAlert.report_count || 0} reports in the last 2 hours
+                </p>
+              </div>
+            </div>
+          )}
+          {elecAlert && (
+            <div style={{
+              background: elecAlert.electricity_status === 'outage' ? '#fee2e2' : '#fef3c7',
+              border: `1px solid ${elecAlert.electricity_status === 'outage' ? '#fca5a5' : '#fde68a'}`,
+              borderRadius: '10px',
+              padding: '10px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <span style={{ fontSize: '18px' }}>{'⚡'}</span>
+              <div>
+                <p style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: elecAlert.electricity_status === 'outage' ? '#b91c1c' : '#92400e',
+                  margin: 0,
+                }}>
+                  Electricity {elecAlert.electricity_status === 'outage' ? 'Outage' : 'Issues'} &mdash; {elecAlert.name}
+                </p>
+                <p style={{ fontSize: '11px', color: '#6b7280', margin: 0 }}>
+                  {elecAlert.report_count || 0} reports in the last 2 hours
+                </p>
+              </div>
+            </div>
+          )}
+          {gasAlert && (
+            <div style={{
+              background: gasAlert.gas_status === 'outage' ? '#fee2e2' : '#fef3c7',
+              border: `1px solid ${gasAlert.gas_status === 'outage' ? '#fca5a5' : '#fde68a'}`,
+              borderRadius: '10px',
+              padding: '10px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}>
+              <span style={{ fontSize: '18px' }}>{'🔥'}</span>
+              <div>
+                <p style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: gasAlert.gas_status === 'outage' ? '#b91c1c' : '#92400e',
+                  margin: 0,
+                }}>
+                  Gas {gasAlert.gas_status === 'outage' ? 'Outage' : 'Issues'} &mdash; {gasAlert.name}
+                </p>
+                <p style={{ fontSize: '11px', color: '#6b7280', margin: 0 }}>
+                  {gasAlert.report_count || 0} reports in the last 2 hours
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Announcements */}
+      {announcements.length > 0 && (
+        <div style={{ padding: '0 20px 12px' }}>
+          {announcements.map(a => (
+            <div key={a.id} style={{
+              background: '#fffbeb',
+              border: '1px solid #fde68a',
+              borderRadius: '10px',
+              padding: '10px 16px',
+              marginBottom: '8px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+            }}>
+              <span style={{ fontSize: '18px', flexShrink: 0 }}>{'📢'}</span>
+              <div>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', margin: '0 0 2px' }}>
+                  {a.title}
+                </p>
+                <p style={{ fontSize: '12px', color: '#b45309', margin: 0 }}>{a.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Stats bar */}
+      <div style={{
+        display: 'flex',
+        gap: '12px',
+        padding: '0 20px 20px',
+        flexWrap: 'wrap',
+      }}>
+        {[
+          { icon: '📋', label: 'Active Reports', value: totalReports, color: '#2563eb' },
+          { icon: '🗺️', label: 'Affected Zones', value: affectedZones, color: '#dc2626' },
+          { icon: '🏘️', label: 'Total Zones', value: zones.length, color: '#16a34a' },
+        ].map(s => (
+          <div key={s.label} style={{
+            flex: '1',
+            minWidth: '100px',
+            background: '#fff',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '14px 16px',
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '20px', marginBottom: '4px' }}>{s.icon}</div>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: '500' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Map + Feed */}
+      <div style={{
+        display: 'flex',
+        gap: '16px',
+        padding: '0 20px 40px',
+        flexWrap: 'wrap',
+      }}>
+        {/* Map */}
+        <div style={{
+          flex: '2',
+          minWidth: '300px',
+          background: '#fff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          height: '480px',
+        }}>
+          <div style={{
+            padding: '14px 18px',
+            borderBottom: '1px solid #f3f4f6',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            <span style={{ fontSize: '16px' }}>{'🗺️'}</span>
+            <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#111', margin: 0 }}>
+              Live Zone Map
+            </h2>
+            <div style={{
+              marginLeft: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '11px',
+              color: '#16a34a',
+              background: '#f0fdf4',
+              padding: '3px 8px',
+              borderRadius: '20px',
+            }}>
+              <span style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: '#16a34a',
+                display: 'inline-block',
+              }} />
+              Live
+            </div>
+          </div>
+          <div style={{ height: 'calc(100% - 53px)' }}>
+            <ZoneMap zones={zones} />
+          </div>
+        </div>
+
+        {/* Report Feed */}
+        <div style={{
+          flex: '1',
+          minWidth: '280px',
+          background: '#fff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          height: '480px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
+          <div style={{
+            padding: '14px 18px',
+            borderBottom: '1px solid #f3f4f6',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: '16px' }}>{'📡'}</span>
+            <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#111', margin: 0 }}>
+              Live Reports
+            </h2>
+            {reports.length > 0 && (
+              <span style={{
+                marginLeft: 'auto',
+                background: '#eff6ff',
+                color: '#2563eb',
+                fontSize: '11px',
+                fontWeight: '600',
+                padding: '2px 8px',
+                borderRadius: '20px',
+              }}>
+                {reports.length} active
+              </span>
+            )}
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '0 14px' }}>
+            <ReportFeed reports={reports} />
+          </div>
+        </div>
+      </div>
+
+      {/* CTA */}
+      {!userIsAdmin && (
+        <div style={{
+          margin: '0 20px 40px',
+          background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)',
+          borderRadius: '16px',
+          padding: '28px 24px',
+          textAlign: 'center',
+          color: '#fff',
+        }}>
+          <p style={{ fontSize: '20px', fontWeight: '800', margin: '0 0 8px' }}>
+            Facing a utility issue?
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+          <p style={{ fontSize: '13px', color: '#bfdbfe', margin: '0 0 18px' }}>
+            Report it now and help your neighbors stay informed
+          </p>
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/report"
+            style={{
+              display: 'inline-block',
+              background: '#fff',
+              color: '#1d4ed8',
+              fontWeight: '700',
+              fontSize: '14px',
+              padding: '10px 28px',
+              borderRadius: '10px',
+              textDecoration: 'none',
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            Report an Issue
           </a>
         </div>
-      </main>
+      )}
+
     </div>
-  );
+  )
 }
