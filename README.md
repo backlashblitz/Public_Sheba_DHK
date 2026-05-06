@@ -235,7 +235,6 @@ Full control panel for zone management, report handling, and announcement publis
 ## 👨‍💻 Developer
 
 **Developed by:** Rahin
-**Project Type:** Final Year Computer Science Project
 **Institution:** Dhaka, Bangladesh
 **Year:** 2026
 
@@ -271,7 +270,7 @@ This project is licensed under the **MIT License** — feel free to use, modify,
 
 <div align="center">
 
-**Built with ❤️ for the people of Dhaka**
+
 
 [🌐 Live App](https://public-sheba-dhk.vercel.app) · [🐛 Report Bug](https://github.com/backlashblitz/Public_Sheba_DHK/issues) · [💡 Request Feature](https://github.com/backlashblitz/Public_Sheba_DHK/issues)
 
