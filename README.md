@@ -235,7 +235,6 @@ Full control panel for zone management, report handling, and announcement publis
 ## 👨‍💻 Developer
 
 **Developed by:** Rahin
-**Institution:** Dhaka, Bangladesh
 **Year:** 2026
 
 ---
