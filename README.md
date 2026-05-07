@@ -216,21 +216,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 📱 Screenshots
-
-### Login Page
-Beautiful split-screen design with animated crisis statistics and smooth transitions.
-
-### Live Zone Map
-Interactive Leaflet map showing real-time utility status for all 12 Dhaka zones with color-coded markers.
-
-### Report Issue
-Step-by-step report form with smart utility type detection and instant community diagnosis.
-
-### Admin Dashboard
-Full control panel for zone management, report handling, and announcement publishing.
-
----
 
 ## 👨‍💻 Developer
 
