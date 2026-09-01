@@ -35,6 +35,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [current, setCurrent] = useState(0)
@@ -78,6 +79,10 @@ export default function LoginPage() {
         setError(error.message)
         setLoading(false)
       } else {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('keep_logged_in', keepLoggedIn ? 'true' : 'false')
+          sessionStorage.setItem('session_active', 'true')
+        }
         window.location.href = '/'
       }
     } else {
@@ -646,9 +651,40 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Forgot password link — login mode only */}
+                {/* Keep me logged in & Forgot password link — login mode only */}
                 {mode === 'login' && (
-                  <div style={{ textAlign: 'right', marginTop: '-4px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: '-2px',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                  }}>
+                    <label style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={keepLoggedIn}
+                        onChange={e => setKeepLoggedIn(e.target.checked)}
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          accentColor: '#2563eb',
+                          cursor: 'pointer',
+                          borderRadius: '4px',
+                        }}
+                      />
+                      <span style={{ fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>
+                        Keep me logged in
+                      </span>
+                    </label>
+
                     <button
                       type="button"
                       onClick={() => {
