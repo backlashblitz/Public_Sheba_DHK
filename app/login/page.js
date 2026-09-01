@@ -6,21 +6,21 @@ import { Droplets, Mail, Lock, User } from 'lucide-react'
 
 const slides = [
   {
-    image: '/images/water-crisis.jpeg',
+    image: '/images/water-crisis.png',
     stat: '4M+',
     statLabel: 'Dhaka residents affected by water issues daily',
     tag: '💧 Water Crisis',
     tagColor: '#2563eb',
   },
   {
-    image: '/images/loadshedding.jpg',
+    image: '/images/loadshedding.png',
     stat: '8hrs',
     statLabel: 'Average daily load shedding in many Dhaka zones',
     tag: '⚡ Load Shedding',
     tagColor: '#d97706',
   },
   {
-    image: '/images/gas_crisis.jpg',
+    image: '/images/gas_crisis.png',
     stat: '60%',
     statLabel: 'Households face gas pressure issues every week',
     tag: '🔥 Gas Crisis',
@@ -47,6 +47,15 @@ export default function LoginPage() {
   const [forgotSent, setForgotSent] = useState(false)
 
   useEffect(() => {
+    // If already logged in, redirect to home
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        window.location.href = '/'
+      }
+    })
+  }, [])
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setFade(false)
       setTimeout(() => {
@@ -67,9 +76,9 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         setError(error.message)
+        setLoading(false)
       } else {
-        router.push('/')
-        router.refresh()
+        window.location.href = '/'
       }
     } else {
       if (!username.trim()) {
@@ -91,8 +100,8 @@ export default function LoginPage() {
         setSuccess('Account created! You can now sign in.')
         setMode('login')
       }
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   async function handleForgotPassword(e) {
