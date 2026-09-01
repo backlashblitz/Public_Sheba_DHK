@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { Droplets, Mail, Lock, User } from 'lucide-react'
+import { Droplets, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 
 const slides = [
   {
@@ -36,6 +36,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const [keepLoggedIn, setKeepLoggedIn] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [current, setCurrent] = useState(0)
@@ -48,6 +49,14 @@ export default function LoginPage() {
   const [forgotSent, setForgotSent] = useState(false)
 
   useEffect(() => {
+    // Check if redirected after successful password reset
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.get('reset') === 'success') {
+        setSuccess('Password updated successfully! Please sign in with your new password.')
+      }
+    }
+
     // If already logged in, redirect to home
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -634,13 +643,13 @@ export default function LoginPage() {
                   <div style={{ position: 'relative' }}>
                     <Lock size={16} color="#9ca3af" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       placeholder="Minimum 6 characters"
                       style={{
-                        width: '100%', padding: '12px 14px 12px 42px',
+                        width: '100%', padding: '12px 42px 12px 42px',
                         border: '1.5px solid #e5e7eb', borderRadius: '10px',
                         fontSize: '14px', outline: 'none', boxSizing: 'border-box',
                         color: '#111827', transition: 'border-color 0.2s',
@@ -648,6 +657,28 @@ export default function LoginPage() {
                       onFocus={e => e.target.style.borderColor = '#3b82f6'}
                       onBlur={e => e.target.style.borderColor = '#e5e7eb'}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#9ca3af',
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 </div>
 
